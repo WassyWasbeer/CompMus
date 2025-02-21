@@ -12,13 +12,12 @@ library(tidyverse)
 library(plotly)
 
 aisc2024 <- read_csv('aisc2024.csv')
+corpus <- read_csv('compmus2025.csv')
 
 ```
 
-Column {data-width=650}
------------------------------------------------------------------------
 
-### Chart A
+### AI Contest Visualization
 
 ```{r}
 aisc2024 |>                   # Start with the data
@@ -26,7 +25,8 @@ aisc2024 |>                   # Start with the data
     aes(
       x = valence,
       y = arousal,
-      colour = tempo
+      colour = tempo,
+      label = artist
     )
   ) +
   geom_point() +              # Scatter plot.
@@ -50,18 +50,29 @@ aisc2024 |>                   # Start with the data
 ggplotly()
 ```
 
-Column {data-width=350}
------------------------------------------------------------------------
 
-### Chart B
+### Corpus 2025 Visualization
 
 ```{r}
-
-```
-
-### Chart C
-
-```{r}
+corpus |>                   # Start with the data
+  ggplot(                     # Set up the plot.
+    aes(
+      x = valence,
+      y = arousal,
+      colour = tempo,
+      label = filename
+    )
+  ) +
+  geom_point() +              # Scatter plot.
+  geom_rug(linewidth = 0.1) + # Add 'fringes' to show data distribution.
+  geom_smooth() +
+  scale_colour_viridis_c() +  # Use the popular viridis colour palette.
+  scale_size_continuous(      # Fine-tune the sizes of each point.
+    trans = "exp",            # Use an exp transformation to emphasise loud..
+    guide = "none"            # Remove the legend for size.
+  ) +
+  theme_light()             # Use a simpler theme.
+ggplotly()
 
 ```
 
