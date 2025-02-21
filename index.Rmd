@@ -63,7 +63,7 @@ corpus |>                   # Start with the data
       label = filename
     )
   ) +
-  geom_point() +              # Scatter plot.
+  geom_point(aes(size = ifelse(filename %in% c("senn-v-1", "senn-v-2"), 3, 1))) +              # Scatter plot.
   geom_rug(linewidth = 0.1) + # Add 'fringes' to show data distribution.
   geom_smooth() +
   scale_colour_viridis_c() +  # Use the popular viridis colour palette.
