@@ -3,7 +3,6 @@ title: "Computational Musicology Portfolio"
 author: "Senn Veenboer"
 output: 
   flexdashboard::flex_dashboard:
-    storyboard: true
 ---
 
 ```{r setup, include=FALSE}
@@ -135,10 +134,133 @@ key_templates_temperley <-
 
 ```
 
- 
+Introduction
+==============================
+
+Column
+--------------------------
+Welcome to my portfolio. In this portfolio I analyzed two songs, namely: 'Lost - Kontinuum' and 'Stay with me - Mendum'.
+
+Lost is an indie dance song that has a stable rhythm and a summer vibe to it.
+```{r, echo=FALSE, results='asis'}
+cat('
+<audio controls>
+    <source src="songs/senn-v-1.mp3" type="audio/mpeg">
+    Your browser does not support the audio element.
+</audio>
+')
+```
+Stay with me is`a Drumstep song that has a weird bass line and is quite energetic but slow between the drops.
+```{r, echo=FALSE, results='asis'}
+cat('
+<audio controls>
+    <source src="songs/senn-v-2.mp3" type="audio/mpeg">
+    Your browser does not support the audio element.
+</audio>
+')
+```
+
+Tempo & Rhythm {.storyboard}
+=========================================
+
+### Energy and spectral novelty 'Lost'
+
+
+#### Energy novelty
+
+```{r}
+"features/senn-v-1.json" |>
+  compmus_energy_novelty() |> 
+  ggplot(aes(t, novelty)) +
+  geom_line() +
+  theme_minimal() +
+  labs(x = "Time (s)", y = "Energy Novelty")
+```
+
+***
+Lost has a very stable beat and is smoothly flowing throughout the whole song, which you can see in this energy novelty graph. The energy peaks only at the beginning when the beat starts but after that the energy stays quite low the entire way through. The two drops in the song are at 50 seconds and 160 seconds which are not very present at all.
+
+
+#### Spectral novelty 
+
+```{r}
+"features/senn-v-1.json" |>
+  compmus_spectral_novelty() |> 
+  ggplot(aes(t, novelty)) +
+  geom_line() +
+  theme_minimal() +
+  labs(x = "Time (s)", y = "Spectral Novelty")
+```
+
+***
+This spectral novelty graph shows the differences in the spectral domain, which can detect: instrument changes, chord progressions and melodic transitions. At the 20 seconds mark the vocals get introduced and the drums are removed which lowers the spectral novelty quite a lot. Other than the introduction of the vocals there is also a lowering at the 125 seconds mark where the chorus ends.
+
+
+### Tempogram 'Lost'
+
+```{r}
+"features/senn-v-1.json" |>
+  compmus_tempogram(window_size = 8, hop_size = 1, cyclic = TRUE) |>
+  ggplot(aes(x = time, y = bpm, fill = power)) +
+  geom_raster() +
+  scale_fill_viridis_c(guide = "none") +
+  labs(x = "Time (s)", y = "Tempo (BPM)") +
+  theme_classic()
+```
+
+***
+I visualized the tempo of the song 'Lost' using a *cyclic* tempogram, because the song has a very stable rhythm that does not change at all during the entire song. It is almost a perfect straight line since it is electronically made and is not performed by a human. The BPM can be read and looks in between 110-115 which is correct since the BPM of the song is 113.
+
+
+### Energy and spectral novelty 'Stay with me'
+
+
+#### Energy novelty
+
+```{r}
+"features/senn-v-2.json" |>
+  compmus_energy_novelty() |> 
+  ggplot(aes(t, novelty)) +
+  geom_line() +
+  theme_minimal() +
+  labs(x = "Time (s)", y = "Energy Novelty")
+```
+
+***
+The song 'Stay with me' starts with a bit of piano and vocals and when the first bass comes into play and after that there is a buildup until the 30 seconds mark where the beat drops and goes off rhythm, but interestingly it is not the highest energy peak. That is the second drop of the song at 90 seconds, which has more silence before it drops and explains the peak.
+
+
+#### Spectral novelty 'Stay with me'
+
+```{r}
+"features/senn-v-2.json" |>
+  compmus_spectral_novelty() |> 
+  ggplot(aes(t, novelty)) +
+  geom_line() +
+  theme_minimal() +
+  labs(x = "Time (s)", y = "Spectral Novelty")
+```
+
+***
+Theess
+
+
+### Tempogram 'Stay with me'
+```{r}
+"features/senn-v-2.json" |>
+  compmus_tempogram(window_size = 8, hop_size = 1, cyclic = FALSE) |>
+  ggplot(aes(x = time, y = bpm, fill = power)) +
+  geom_raster() +
+  scale_fill_viridis_c(guide = "none") +
+  labs(x = "Time (s)", y = "Tempo (BPM)") +
+  theme_classic()
+```
+
+***
+In contrast to the tempogram of 'Lost', this tempogram of 'Stay with me' is not stable at all mostly due to the drums of the song. The drums of the song are not exactly on the beat of the song and differ constantly by an 8th note. It explains the wiggly lines up until the 75 second mark. However, after the chorus the tempo does not change but there is obviously a jump in tempo up until the 90 seconds mark. This part has no drums at all so it is basing the beat on the piano part of the song which weirdly enough is the *actual bpm* of 160. Interestingly enough there is a trend throughout the whole song of a bpm of 320 which is double the actual bpm.
 
 Key & Chordograms
-====================================
+====================================================
 
 Column {.tabset}
 ------------------------------------------------
@@ -209,14 +331,11 @@ This keygram of the song Lost is made using the given code and is pretty blurry 
 ***
 This keygram of the same song is made with the improvements by temperley which gives the keygram a better definition but changes the key completely in some cases (eg. Em and C).
 
-Chromagrams & Cepstograms
+Chromagrams & Cepstograms {.storyboard}
 =================================================
 
 
-Column {.tabset}
---------------------------------------------------
-
-### Chromagram song 1
+### Chromagram of the song 'Lost'
 
 ```{r}
 "features/senn-v-1.json" |>                           # Change the track
@@ -238,11 +357,11 @@ Column {.tabset}
 
 ```
 
-### Cepstogram song 1
+### Cepstogram of the song 'Lost'
 
 ```{r}
 "features/senn-v-1.json" |>                           # Change the track
-  compmus_mfccs(norm = "euclidean") |>                  # Change the norm
+  compmus_mfccs(norm = "manhattan") |>                  # Change the norm
   ggplot(aes(x = time, y = mfcc, fill = value)) +
   geom_raster() +
   scale_y_continuous(
@@ -253,6 +372,10 @@ Column {.tabset}
   labs(x = "Time (s)", y = "Coefficient Number", fill = NULL) +
   theme_classic()                                      # Change the theme?
 ```
+
+***
+This cepstogram of the song 'Lost' shows bright almost constant lower coefficients, which indicates that there is a stable fundamental frequency.
+Around 60 sec and 160 sec there is a drop in cepstral energy followed by a surge of energy that lasts about a minute each. This shows that the song has a instrumental break before the drop which has a lot more cepstral energy than the rest of the song.
 
 ### Chroma similarity song 1
 
@@ -290,10 +413,6 @@ Column {.tabset}
 
 
 
-Column {.tabset}
-------------------------------------------------------
-
-
 ### Chromagram song 2
 
 ```{r}
@@ -321,7 +440,7 @@ Column {.tabset}
 
 ```{r}
 "features/senn-v-2.json" |>                           # Change the track
-  compmus_mfccs(norm = "euclidean") |>                  # Change the norm
+  compmus_mfccs(norm = "manhattan") |>                  # Change the norm
   ggplot(aes(x = time, y = mfcc, fill = value)) +
   geom_raster() +
   scale_y_continuous(
@@ -332,6 +451,9 @@ Column {.tabset}
   labs(x = "Time (s)", y = "Coefficient Number", fill = NULL) +
   theme_classic()                                      # Change the theme?
 ```
+
+***
+The cepstogram of the song 'Stay with me' shows a lot of instability in the lower coefficients which indicates that there is a lot of
 
 ### Chroma similarity song 2
 
@@ -365,6 +487,9 @@ Column {.tabset}
   labs(x = "Time (s)", y = NULL, fill = NULL) +
   theme_classic()                                      # Change the theme?
 ```
+
+
+
 
 First visualisations
 ===========================================================
