@@ -9,10 +9,35 @@ output:
 library(flexdashboard)
 library(tidyverse)
 library(plotly)
+library(tidymodels)
+library(ggdendro)
+library(heatmaply)
 source("compmus.R")
 
 aisc2024 <- read_csv('aisc2024.csv')
 corpus <- read_csv('compmus2025.csv')
+
+compmus2025_filtered <- 
+  corpus |> filter(!is.na(ai)) |> 
+  mutate(ai = factor(if_else(ai, "AI", "Non-AI")))
+
+compmus_cv <- compmus2025_filtered |> vfold_cv(5)
+
+get_conf_mat <- function(fit) {
+  outcome <- .get_tune_outcome_names(fit)
+  fit |> 
+    collect_predictions() |> 
+    conf_mat(truth = outcome, estimate = .pred_class)
+}  
+
+get_pr <- function(fit) {
+  fit |> 
+    conf_mat_resampled() |> 
+    group_by(Prediction) |> mutate(precision = Freq / sum(Freq)) |> 
+    group_by(Truth) |> mutate(recall = Freq / sum(Freq)) |> 
+    ungroup() |> filter(Prediction == Truth) |> 
+    select(class = Prediction, precision, recall)
+}  
 
 #      C     C#    D     Eb    E     F     F#    G     Ab    A     Bb    B
 major_chord <-
@@ -150,7 +175,8 @@ cat('
 </audio>
 ')
 ```
-Stay with me is`a Drumstep song that has a weird bass line and is quite energetic but slow between the drops.
+Stay with me is a Drumstep song that has a weird bass line and is quite energetic but slow between the drops.
+
 ```{r, echo=FALSE, results='asis'}
 cat('
 <audio controls>
@@ -159,6 +185,139 @@ cat('
 </audio>
 ')
 ```
+### Visualisation compmus
+
+
+```{r}
+compmus2025_filtered |>
+  ggplot(aes(y = instrumentalness, x = arousal, colour = ai, size = danceability)) +
+  geom_point(alpha = 0.8) +
+  scale_color_viridis_d() +
+  labs(
+    y = "Instrumentalness",
+    x = "Arousal",
+    size = "Danceability",
+    colour = "AI"
+  )
+```
+
+
+Classification {.storyboard}
+==========================================
+
+
+### Baseline classifcation
+
+#### Basline
+
+To be able to classify the songs in the corpus and determine if a song is made by an AI or not, an algorithm will be used. Namely, the k-nearest neighbour (knn) algorithm. Using 1 neighbour and all available features to check the performance.
+
+```{r}
+classification_recipe <-
+  recipe(
+    ai ~
+      arousal +
+      danceability +
+      instrumentalness +
+      tempo +
+      valence,
+    data = compmus2025_filtered
+  ) |>
+  step_center(all_predictors()) |>
+  step_scale(all_predictors())      # Converts to z-scores.
+  # step_range(all_predictors())    # Sets range to [0, 1].
+
+knn_model <-
+  nearest_neighbor(neighbors = 1) |>
+  set_mode("classification") |> 
+  set_engine("kknn")
+classification_knn <- 
+  workflow() |> 
+  add_recipe(classification_recipe) |> 
+  add_model(knn_model) |> 
+  fit_resamples(compmus_cv, control = control_resamples(save_pred = TRUE))
+
+classification_knn |> get_conf_mat() |> autoplot(type = "heatmap")
+```
+
+```{r}
+
+classification_knn |> get_pr()
+```
+
+#### feature importance
+
+The heatmap shows us the accuracy of the algorithm. Both the top-left and bottom-right squares are correct classifications while the other 2 are false positives (top-right) and false negatives (bottom-left) Using all the features available gives an average precision if about 64% which is quite low.
+
+Using a random forest model we can determine the importance of each feature.
+
+```{r}
+forest_model <-
+  rand_forest() |>
+  set_mode("classification") |> 
+  set_engine("ranger", importance = "impurity")
+workflow() |> 
+  add_recipe(classification_recipe) |> 
+  add_model(forest_model) |> 
+  fit(compmus2025_filtered) |> 
+  pluck("fit", "fit", "fit") |>
+  ranger::importance() |> 
+  enframe() |> 
+  mutate(name = fct_reorder(name, value)) |> 
+  ggplot(aes(name, value)) + 
+  geom_col() + 
+  coord_flip() +
+  theme_minimal() +
+  labs(x = NULL, y = "Importance")
+```
+
+The feature with the least importance is "tempo" and is not unexpected. Tempo varies all the time and is not a good indicator if it AI made and will be removed as a feature. 
+
+
+### Adjusted classification
+
+#### Adjusted heatmap
+
+The adjusted model will not have the "tempo" feature which will help with the accuracy.
+
+```{r}
+classification_recipe <-
+  recipe(
+    ai ~
+      arousal +
+      danceability +
+      instrumentalness +
+      valence,
+    data = compmus2025_filtered
+  ) |>
+  step_center(all_predictors()) |>
+  step_scale(all_predictors())      # Converts to z-scores.
+  # step_range(all_predictors())    # Sets range to [0, 1].
+
+
+indie_forest <- 
+  workflow() |> 
+  add_recipe(classification_recipe) |> 
+  add_model(forest_model) |> 
+  fit_resamples(
+    compmus_cv, 
+    control = control_resamples(save_pred = TRUE)
+  )
+
+indie_forest |> get_conf_mat() |> autoplot(type = "heatmap")
+
+```
+
+The amount of false positives and false negatives both went down and supports the statement that tempo does not add value for the prediction.
+
+```{r}
+indie_forest |> get_pr()
+```
+
+This is shown in the average precision which improved to an average of about 67% and is not really a big improvement from the 64% from the model knn model. However, through this improvement 6 or more songs are guessed correctly on average than using the knn algorithm.
+
+
+
 
 Tempo & Rhythm {.storyboard}
 =========================================
@@ -177,7 +336,7 @@ Tempo & Rhythm {.storyboard}
   labs(x = "Time (s)", y = "Energy Novelty")
 ```
 
-***
+
 Lost has a very stable beat and is smoothly flowing throughout the whole song, which you can see in this energy novelty graph. The energy peaks only at the beginning when the beat starts but after that the energy stays quite low the entire way through. The two drops in the song are at 50 seconds and 160 seconds which are not very present at all.
 
 
@@ -192,7 +351,7 @@ Lost has a very stable beat and is smoothly flowing throughout the whole song, w
   labs(x = "Time (s)", y = "Spectral Novelty")
 ```
 
-***
+
 This spectral novelty graph shows the differences in the spectral domain, which can detect: instrument changes, chord progressions and melodic transitions. At the 20 seconds mark the vocals get introduced and the drums are removed which lowers the spectral novelty quite a lot. Other than the introduction of the vocals there is also a lowering at the 125 seconds mark where the chorus ends.
 
 
@@ -219,7 +378,7 @@ I visualized the tempo of the song 'Lost' using a *cyclic* tempogram, because th
 
 ```{r}
 "features/senn-v-2.json" |>
-  compmus_energy_novelty() |> 
+  compmus_energy_novelty() |>
   ggplot(aes(t, novelty)) +
   geom_line() +
   theme_minimal() +
@@ -234,7 +393,7 @@ The song 'Stay with me' starts with a bit of piano and vocals and when the first
 
 ```{r}
 "features/senn-v-2.json" |>
-  compmus_spectral_novelty() |> 
+  compmus_spectral_novelty() |>
   ggplot(aes(t, novelty)) +
   geom_line() +
   theme_minimal() +
