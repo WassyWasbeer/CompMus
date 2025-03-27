@@ -230,6 +230,8 @@ Column
 
 ### Visualisation corpus
 
+####
+
 This is a visualization of the whole class corpus based on the highest performing features, which are explained in detail in the 'Classification' tab. My songs are highlighted in orange and are both Non-AI. The songs seem closely related in the graph but are actually totally different in nature and will be explored in this portfolio.
 
 
@@ -280,6 +282,10 @@ Column
 
 
 ### Lost
+
+#### Pitch
+
+Pitch is the perceived highness or lowness of a sound, determined by its frequency. It will be visualized through the following graphs.
 
 #### Chromagram
 
@@ -416,6 +422,8 @@ Column
 
 ### Lost
 
+#### Tempo & Energy
+
 Tempo is the speed of a song, measured in beats per minute (BPM) and energy is the overall intensity or activity level of the music, influenced by loudness and rhythm. The following graphs visualizes these features.
 
 
@@ -502,6 +510,8 @@ Column
 -----------------------------------------
 
 ### Lost
+
+#### Timbre
 
 Timbre is the “tone color” or sound quality that makes an instrument or voice uniquely recognizable. The following graphs can visualize those changes in different ways. The graphs can show differences in instrument changes, chord progressions and melodic transitions.
 
