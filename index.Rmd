@@ -1,8 +1,27 @@
 ---
 title: "Computational Musicology Portfolio"
 author: "Senn Veenboer"
-output: 
+output:
   flexdashboard::flex_dashboard:
+    theme:
+      version: 4
+      bg: "#101010"
+      fg: "#FDF7F7" 
+      primary: "#b80235"
+      navbar-bg: "#b80235"
+      base_font: 
+        google: 
+          family: Monsterrat
+          local: false
+      heading_font:
+        google: 
+          family: JetBrains Mono
+          local: false
+      code_font:
+        google: 
+          family: JetBrains Mono
+          local: false
+    orientation: columns
 ---
 
 ```{r setup, include=FALSE}
@@ -164,9 +183,18 @@ Introduction
 
 Column
 --------------------------
-Welcome to my portfolio. In this portfolio I analyzed two songs, namely: 'Lost - Kontinuum' and 'Stay with me - Mendum'.
 
-Lost is an indie dance song that has a stable rhythm and a summer vibe to it.
+### Song Information
+
+
+Welcome to my portfolio, where I explore two important tracks that sparked my love for electronic music: “Lost” by Kontinuum and “Stay with Me” by Mendum. The first caught my attention a few years ago with its breezy, summery, laid-back feel and consistent rhythm, while the second inspired me in 2014 with its energetic feel and dramatic drops.
+
+#### Lost - Kontinuum
+
+“Lost” is a song from the indie dance genre and stands out for its mid-tempo groove and warm, summery feel. When it's viewed alongside the entire corpus, its instrumentalness, arousal, and valence all hover around average levels. Meanwhile, its danceability sits above the midpoint, thanks to a steady beat that makes the song fairly accessible and enjoyable for listeners.
+
+
+
 ```{r, echo=FALSE, results='asis'}
 cat('
 <audio controls>
@@ -175,7 +203,17 @@ cat('
 </audio>
 ')
 ```
-Stay with me is a Drumstep song that has a weird bass line and is quite energetic but slow between the drops.
+
+
+
+
+
+
+
+#### Stay with me - Mendum
+
+“Stay with Me” is song from the drumstep genre and is therefore faster in tempo, but its instrumentalness and arousal features are close to the corpus mean. Its valence also remains moderate, although the track’s energetic drops can lend occasional bursts of intensity. Similar to “Lost” danceability stays above average, ensuring a strong rhythmic drive. Despite these similarities, the speed and dramatic transitions of “Stay with Me” give it a noticeably different flavor than the laid-back appeal of “Lost.”
+
 
 ```{r, echo=FALSE, results='asis'}
 cat('
@@ -185,38 +223,412 @@ cat('
 </audio>
 ')
 ```
-### Visualisation compmus
+
+
+Column
+------------------------
+
+### Visualisation corpus
+
+This is a visualization of the whole class corpus based on the highest performing features, which are explained in detail in the 'Classification' tab. My songs are highlighted in orange and are both Non-AI. The songs seem closely related in the graph but are actually totally different in nature and will be explored in this portfolio.
 
 
 ```{r}
 compmus2025_filtered |>
-  ggplot(aes(y = instrumentalness, x = arousal, colour = ai, size = danceability)) +
-  geom_point(alpha = 0.8) +
+  ggplot(
+    aes(
+      x = arousal,
+      y = instrumentalness,
+      colour = ai,
+      size = danceability
+    )
+  ) +
+  # 1) plot all points with a lower alpha (lighter points)
+  geom_point(alpha = 1) +
+
+  # 2) highlight the two special files by plotting them in a second layer
+  geom_point(
+    data = compmus2025_filtered |>
+      filter(filename %in% c("senn-v-1", "senn-v-2")),
+    colour = "red",
+    size = 5,
+    alpha = 0.3
+  ) +
+
   scale_color_viridis_d() +
   labs(
-    y = "Instrumentalness",
     x = "Arousal",
-    size = "Danceability",
-    colour = "AI"
-  )
+    y = "Instrumentalness",
+    colour = "AI",
+    size = "Danceability"
+  ) +
+  theme_minimal()
 ```
 
 
-Classification {.storyboard}
+
+
+
+
+
+
+Pitch & Harmony
+=================================================
+
+Column
+-----------------------------
+
+
+### Lost
+
+#### Chromagram
+
+The chromagram shows that the song the most prominent note is D and the other highlighted notes are in the key for D major, which is the key of the song.
+
+```{r}
+"features/senn-v-1.json" |>                           # Change the track
+  compmus_chroma(norm = "euclidean") |>                 # Change the norm
+  ggplot(aes(x = time, y = pc, fill = value)) +
+  geom_raster() +
+  scale_y_continuous(
+    breaks = 0:11,
+    minor_breaks = NULL,
+    labels = c(
+                "C", "C#|Db", "D", "D#|Eb",
+                "E", "F", "F#|Gb", "G",
+                "G#|Ab", "A", "A#|Bb", "B"
+              )
+  ) +
+  scale_fill_viridis_c(option = "mako") +               # Change the colours?
+  labs(x = "Time (s)", y = NULL, fill = NULL) +
+  theme_minimal()
+
+```
+
+
+
+#### Chordogram
+
+A chordogram uses the chroma features to cluster the notes into the major, minor or seventh chords based on the major and minor key. "Lost" uses funky but the same 4 chords before the drop which aren't exactly major or minor and is the reason why there is a lot of relative major/minor shifts. Also, in the drop the chord progression interchanges every couple measures and explains why those sections are pretty unreadable.
+
+```{r}
+"features/senn-v-1.json" |>
+  compmus_chroma(norm = "euclidean") |>
+  compmus_match_pitch_templates(
+    chord_templates,         # Change to chord_templates if desired
+    norm = "euclidean",       # Try different norms (and match it with what you used in `compmus_chroma`)
+    distance = "cosine"   # Try different distance metrics
+  ) |>
+  ggplot(aes(x = time, y = name, fill = d)) +
+  geom_raster() +
+  scale_fill_viridis_c(option = "mako") +               # Change the colours?
+  labs(x = "Time (s)", y = "Template", fill = NULL) +
+  theme_minimal()                                      # Change the theme?
+```
+
+
+
+
+
+
+
+Column
+-------------------------------------
+
+### Stay with me
+
+#### Chromagram
+
+'Stay with me' is also in the key of D major, like 'Lost', but it is way more chaotic and doesn't really have a pattern.
+
+```{r}
+"features/senn-v-2.json" |>                           # Change the track
+  compmus_chroma(norm = "euclidean") |>                 # Change the norm
+  ggplot(aes(x = time, y = pc, fill = value)) +
+  geom_raster() +
+  scale_y_continuous(
+    breaks = 0:11,
+    minor_breaks = NULL,
+    labels = c(
+                "C", "C#|Db", "D", "D#|Eb",
+                "E", "F", "F#|Gb", "G",
+                "G#|Ab", "A", "A#|Bb", "B"
+              )
+  ) +
+  scale_fill_viridis_c(option = "magma") +               # Change the colours?
+  labs(x = "Time (s)", y = NULL, fill = NULL) +
+  theme_minimal()
+
+```
+
+#### Chroma similarity
+
+The randomness of the song is truly captivated in the chroma-based self-similarity matrix, which show no real clear overlap of sections in the song.
+
+```{r}
+"features/senn-v-2.json" |>                           # Change the track
+  compmus_chroma(norm = "euclidean") |>                 # Change the norm
+  compmus_self_similarity(
+    feature = pc,
+    distance = "cosine"                             # Change the distance
+  ) |>
+  ggplot(aes(x = xtime, y = ytime, fill = d)) +
+  geom_raster() +
+  scale_fill_viridis_c(option = "magma") +               # Change the colours?
+  labs(x = "Time (s)", y = NULL, fill = NULL) +
+  theme_minimal()
+```
+
+I love drumstep <3
+ 
+
+#### Chordogram
+
+The same problems that arose with the chordogram for 'Lost' as for 'Stay with me'. The hectic property of this song is very visible as in the chroma-based self-similarity matrix. Weirdly enough it shows there are almost no D major chords in the song while it is in the key of D major. This indicates that the chord progression did not have D major as it's home chord.
+
+```{r}
+"features/senn-v-2.json" |>
+  compmus_chroma(norm = "euclidean") |>
+  compmus_match_pitch_templates(
+    chord_templates,         # Change to chord_templates if desired
+    norm = "euclidean",       # Try different norms (and match it with what you used in `compmus_chroma`)
+    distance = "cosine"   # Try different distance metrics
+  ) |>
+  ggplot(aes(x = time, y = name, fill = d)) +
+  geom_raster() +
+  scale_fill_viridis_c(option = "magma") +               # Change the colours?
+  labs(x = "Time (s)", y = "Template", fill = NULL) +
+  theme_minimal()                                      # Change the theme?
+```
+
+
+
+
+
+
+
+
+Tempo & Energy
+=========================================
+
+Column
+---------------------------------------
+
+### Lost
+
+Tempo is the speed of a song, measured in beats per minute (BPM) and energy is the overall intensity or activity level of the music, influenced by loudness and rhythm. The following graphs visualizes these features.
+
+
+#### Energy novelty
+
+'Lost' has a very stable beat and is smoothly flowing throughout the whole song, which you can see in this energy novelty graph. The energy peaks only at the beginning when the beat starts but after that the energy stays quite low the entire way through. The two drops in the song are at 50 seconds and 160 seconds which are not very present at all, which is due to it's laid-back nature.
+
+```{r}
+"features/senn-v-1.json" |>
+  compmus_energy_novelty() |>
+  ggplot(aes(t, novelty)) +
+  geom_line() +
+  theme_minimal() +
+  labs(x = "Time (s)", y = "Energy Novelty")
+```
+
+
+
+
+
+#### Tempogram
+
+
+I visualized the tempo of 'Lost' using a *cyclic* tempogram, because the song has a very stable rhythm that does not change at all during the entire song. It is almost a perfect straight line since it is electronically made and is not performed by a human. The BPM can be read and looks in between 110-115 which is correct since the BPM of the song is 113.
+
+
+```{r}
+"features/senn-v-1.json" |>
+  compmus_tempogram(window_size = 8, hop_size = 1, cyclic = TRUE) |>
+  ggplot(aes(x = time, y = bpm, fill = power)) +
+  geom_raster() +
+  scale_fill_viridis_c(guide = "none") +
+  labs(x = "Time (s)", y = "Tempo (BPM)") +
+  theme_classic()
+```
+
+
+
+Column
+----------------------------
+
+### Stay with me
+
+
+#### Energy novelty
+
+The song 'Stay with me' starts with a bit of piano and vocals and when the first bass comes into play and after that there is a buildup until the 30 seconds mark where the beat drops and goes off rhythm, but interestingly it is not the highest energy peak. That is the second drop of the song at 90 seconds, which has more silence before it drops and explains the peak.
+
+```{r}
+"features/senn-v-2.json" |>
+  compmus_energy_novelty() |>
+  ggplot(aes(t, novelty)) +
+  geom_line() +
+  theme_minimal() +
+  labs(x = "Time (s)", y = "Energy Novelty")
+```
+
+
+
+
+#### Tempogram 
+
+In contrast to the tempogram of 'Lost', this tempogram of 'Stay with me' is not stable at all mostly due to the drums of the song. The drums of the song are not exactly on the beat of the song and differ constantly due to the half-time drum patterns. It explains the wiggly lines up until the 75 second mark. However, after the chorus the tempo does not change but there is obviously a jump in tempo up until the 90 seconds mark. This part has no drums at all so it is basing the beat on the piano part of the song which weirdly enough is the *actual bpm* of 160. Also, interestingly enough there is a trend throughout the whole song of a bpm of 320 which is double the actual bpm.
+
+
+```{r}
+  "features/senn-v-2.json" |>
+    compmus_tempogram(window_size = 8, hop_size = 1, cyclic = FALSE) |>
+    ggplot(aes(x = time, y = bpm, fill = power)) +
+    geom_raster() +
+    scale_fill_viridis_c(guide = "none") +
+    labs(x = "Time (s)", y = "Tempo (BPM)") +
+    theme_classic()
+```
+
+
+
+
+
+Timbre
+============================================
+
+Column
+-----------------------------------------
+
+### Lost
+
+Timbre is the “tone color” or sound quality that makes an instrument or voice uniquely recognizable. The following graphs can visualize those changes in different ways. The graphs can show differences in instrument changes, chord progressions and melodic transitions.
+
+#### Cepstogram
+
+This cepstogram shows bright almost constant lower coefficients, which shows that there is a stable fundamental timbre in the song, the summery chill vibe.
+Around 55 sec and 160 sec there is a drop in cepstral energy followed by a surge of energy that lasts about a minute each. This shows that the song has a instrumental break before the 2 drops which create a lot more cepstral energy than the rest of the song.
+
+```{r}
+"features/senn-v-1.json" |>                           # Change the track
+  compmus_mfccs(norm = "manhattan") |>                  # Change the norm
+  ggplot(aes(x = time, y = mfcc, fill = value)) +
+  geom_raster() +
+  scale_y_continuous(
+    breaks = 0:12,
+    minor_breaks = NULL,
+  ) +
+  scale_fill_viridis_c(option = "mako") +               # Change the colours?
+  labs(x = "Time (s)", y = "Coefficient Number", fill = NULL) +
+  theme_minimal()                                      # Change the theme?
+```
+
+
+#### Spectral novelty
+
+This spectral novelty graph shows the spectral energy at different moments in time. The same patterns are visivle as in the cepstogram. Between 55-120 and 160-225 seconds is the average spectral energy a bit higher than then the other parts.
+
+```{r}
+"features/senn-v-1.json" |>
+  compmus_spectral_novelty() |>
+  ggplot(aes(t, novelty)) +
+  geom_line() +
+  theme_minimal() +
+  labs(x = "Time (s)", y = "Spectral Novelty")
+```
+
+#### Timbre similarity
+
+The song stays true in it's summery vibe throughout the song and can be shown through the timbre-based self-similarity matrix. The self-similarity matrix compares the song's timbre features with itself. The long diagonal lines and large squares indicate that the songs timbre throughout the song is very consistent.
+
+```{r}
+"features/senn-v-1.json" |>                           # Change the track
+  compmus_mfccs(norm = "manhattan") |>                  # Change the norm
+  compmus_self_similarity(
+    feature = mfcc,
+    distance = "euclidean"                             # Change the distance
+  ) |>
+  ggplot(aes(x = xtime, y = ytime, fill = d)) +
+  geom_raster() +
+  scale_fill_viridis_c(option = "mako") +               # Change the colours?
+  labs(x = "Time (s)", y = NULL, fill = NULL) +
+  theme_minimal()                                      # Change the theme?
+```
+
+
+
+Column
+-------------------------------------
+
+### Stay with me
+
+#### Cepstogram
+
+
+The cepstogram of 'Stay with me' shows between 35 seconds a dip in cepstral energy immediately followed by high cepsteral energy and unstable lower coefficient until 70 seconds which correlates with the first drop of the song. The second drop starts at 90 seconds and goes on until the end of the song with a small break between 130-135 seconds. This shows that the timbre does change quite a bit in the drop but they are no big changes in instruments in the song.
+
+```{r}
+"features/senn-v-2.json" |>                           # Change the track
+  compmus_mfccs(norm = "manhattan") |>                  # Change the norm
+  ggplot(aes(x = time, y = mfcc, fill = value)) +
+  geom_raster() +
+  scale_y_continuous(
+    breaks = 0:12,
+    minor_breaks = NULL,
+  ) +
+  scale_fill_viridis_c(option = "magma") +               # Change the colours?
+  labs(x = "Time (s)", y = "Coefficient Number", fill = NULL) +
+  theme_minimal()                                      # Change the theme?
+```
+
+
+#### Spectral novelty
+
+The sudden changes are better visualized in the spectral novelty graph. This graphs shows a lot of sudden and high peaks in the sections that correlate with the drops of the song.
+
+```{r}
+"features/senn-v-2.json" |>
+  compmus_spectral_novelty() |>
+  ggplot(aes(t, novelty)) +
+  geom_line() +
+  theme_minimal() +
+  labs(x = "Time (s)", y = "Spectral Novelty")
+```
+
+
+
+
+Classification
 ==========================================
 
 
-### Baseline classifcation
+Column
+--------------------------------------------
 
-#### Basline
+### Baseline
+
+####
 
 To be able to classify the songs in the corpus and determine if a song is made by an AI or not, an algorithm will be used. Namely, the k-nearest neighbour (knn) algorithm. Using 1 neighbour and all available features to check the performance.
+
+All the features in the corpus are:
+
+* Arousal: Describes overall intensity or excitement in the music.
+* Danceability: Measures how suitable a track is for dancing, factoring in rhythm stability, beat clarity, and tempo.
+* Instrumentalness: Indicates how “instrumental” the track is. Higher values imply fewer (or no) vocals.
+* Tempo: The speed of the track, measured in beats per minute (BPM).
+* Valence: Suggests the “positiveness” or emotional tone of the music. Higher values mean happier, more upbeat vibes.
+* Approachability: Reflects how easily a casual listener can enjoy the song, linked to familiar structures or less abrasive sounds.
+* Engagingness: Describes how effectively a track holds the listener’s attention, often influenced by dynamic shifts and captivating elements.
 
 ```{r}
 classification_recipe <-
   recipe(
     ai ~
       arousal +
+      approachability +
+      engagingness +
       danceability +
       instrumentalness +
       tempo +
@@ -229,59 +641,63 @@ classification_recipe <-
 
 knn_model <-
   nearest_neighbor(neighbors = 1) |>
-  set_mode("classification") |> 
+  set_mode("classification") |>
   set_engine("kknn")
-classification_knn <- 
-  workflow() |> 
-  add_recipe(classification_recipe) |> 
-  add_model(knn_model) |> 
+classification_knn <-
+  workflow() |>
+  add_recipe(classification_recipe) |>
+  add_model(knn_model) |>
   fit_resamples(compmus_cv, control = control_resamples(save_pred = TRUE))
 
 classification_knn |> get_conf_mat() |> autoplot(type = "heatmap")
 ```
+
 
 ```{r}
 
 classification_knn |> get_pr()
 ```
 
-#### feature importance
+#### Feature importance
 
-The heatmap shows us the accuracy of the algorithm. Both the top-left and bottom-right squares are correct classifications while the other 2 are false positives (top-right) and false negatives (bottom-left) Using all the features available gives an average precision if about 64% which is quite low.
+The heatmap shows us the accuracy of the algorithm. Both the top-left and bottom-right squares are correct classifications while the other 2 are false positives (top-right) and false negatives (bottom-left) for AI. Using all the features available gives a really low average precision and recall.
 
 Using a random forest model we can determine the importance of each feature.
 
 ```{r}
 forest_model <-
   rand_forest() |>
-  set_mode("classification") |> 
+  set_mode("classification") |>
   set_engine("ranger", importance = "impurity")
-workflow() |> 
-  add_recipe(classification_recipe) |> 
-  add_model(forest_model) |> 
-  fit(compmus2025_filtered) |> 
+workflow() |>
+  add_recipe(classification_recipe) |>
+  add_model(forest_model) |>
+  fit(compmus2025_filtered) |>
   pluck("fit", "fit", "fit") |>
-  ranger::importance() |> 
-  enframe() |> 
-  mutate(name = fct_reorder(name, value)) |> 
-  ggplot(aes(name, value)) + 
-  geom_col() + 
+  ranger::importance() |>
+  enframe() |>
+  mutate(name = fct_reorder(name, value)) |>
+  ggplot(aes(name, value)) +
+  geom_col() +
   coord_flip() +
   theme_minimal() +
   labs(x = NULL, y = "Importance")
 ```
 
-The feature with the least importance is "tempo" and is not unexpected. Tempo varies all the time and is not a good indicator if it AI made and will be removed as a feature. 
+The feature with the least importance is "tempo" and is not unexpected. Tempo varies all the time and is not a good indicator if a song is AI since every genre of music has different tempos. Engagingness and approachability also seem, after some testing, to negatively impact the results of the prediction. This means that the tempo, engagingness and approachibility are not good predictors for this model and will therefore be removed in the adjusted model.
 
 
-### Adjusted classification
+Column
+-------------------------------------
 
-#### Adjusted heatmap
+### Adjusted heatmap
 
-The adjusted model will not have the "tempo" feature which will help with the accuracy.
+####
+
+This is the adjusted model without the tempo, engagingness and approachability features, using the random forest algorithm as the classification model instead of knn. The amount of false positives for AI especially went down drastically.
 
 ```{r}
-classification_recipe <-
+classification_recipe2 <-
   recipe(
     ai ~
       arousal +
@@ -295,12 +711,12 @@ classification_recipe <-
   # step_range(all_predictors())    # Sets range to [0, 1].
 
 
-indie_forest <- 
-  workflow() |> 
-  add_recipe(classification_recipe) |> 
-  add_model(forest_model) |> 
+indie_forest <-
+  workflow() |>
+  add_recipe(classification_recipe2) |>
+  add_model(forest_model) |>
   fit_resamples(
-    compmus_cv, 
+    compmus_cv,
     control = control_resamples(save_pred = TRUE)
   )
 
@@ -308,411 +724,106 @@ indie_forest |> get_conf_mat() |> autoplot(type = "heatmap")
 
 ```
 
-The amount of false positives and false negatives both went down and supports the statement that tempo does not add value for the prediction.
+####
+
 
 ```{r}
 indie_forest |> get_pr()
 ```
 
-This is shown in the average precision which improved to an average of about 67% and is not really a big improvement from the 64% from the model knn model. However, through this improvement 6 or more songs are guessed correctly on average than using the knn algorithm.
+The better accuracy is shown in the average precision and recall. It is not really a big improvement from the baseline knn model. However, through this improvement 6 or more songs are guessed correctly on average than using the knn algorithm.
 
 
 
-
-Tempo & Rhythm {.storyboard}
-=========================================
-
-### Energy and spectral novelty 'Lost'
-
-
-#### Energy novelty
-
-```{r}
-"features/senn-v-1.json" |>
-  compmus_energy_novelty() |> 
-  ggplot(aes(t, novelty)) +
-  geom_line() +
-  theme_minimal() +
-  labs(x = "Time (s)", y = "Energy Novelty")
-```
-
-
-Lost has a very stable beat and is smoothly flowing throughout the whole song, which you can see in this energy novelty graph. The energy peaks only at the beginning when the beat starts but after that the energy stays quite low the entire way through. The two drops in the song are at 50 seconds and 160 seconds which are not very present at all.
-
-
-#### Spectral novelty 
-
-```{r}
-"features/senn-v-1.json" |>
-  compmus_spectral_novelty() |> 
-  ggplot(aes(t, novelty)) +
-  geom_line() +
-  theme_minimal() +
-  labs(x = "Time (s)", y = "Spectral Novelty")
-```
-
-
-This spectral novelty graph shows the differences in the spectral domain, which can detect: instrument changes, chord progressions and melodic transitions. At the 20 seconds mark the vocals get introduced and the drums are removed which lowers the spectral novelty quite a lot. Other than the introduction of the vocals there is also a lowering at the 125 seconds mark where the chorus ends.
-
-
-### Tempogram 'Lost'
-
-```{r}
-"features/senn-v-1.json" |>
-  compmus_tempogram(window_size = 8, hop_size = 1, cyclic = TRUE) |>
-  ggplot(aes(x = time, y = bpm, fill = power)) +
-  geom_raster() +
-  scale_fill_viridis_c(guide = "none") +
-  labs(x = "Time (s)", y = "Tempo (BPM)") +
-  theme_classic()
-```
-
-***
-I visualized the tempo of the song 'Lost' using a *cyclic* tempogram, because the song has a very stable rhythm that does not change at all during the entire song. It is almost a perfect straight line since it is electronically made and is not performed by a human. The BPM can be read and looks in between 110-115 which is correct since the BPM of the song is 113.
-
-
-### Energy and spectral novelty 'Stay with me'
-
-
-#### Energy novelty
-
-```{r}
-"features/senn-v-2.json" |>
-  compmus_energy_novelty() |>
-  ggplot(aes(t, novelty)) +
-  geom_line() +
-  theme_minimal() +
-  labs(x = "Time (s)", y = "Energy Novelty")
-```
-
-***
-The song 'Stay with me' starts with a bit of piano and vocals and when the first bass comes into play and after that there is a buildup until the 30 seconds mark where the beat drops and goes off rhythm, but interestingly it is not the highest energy peak. That is the second drop of the song at 90 seconds, which has more silence before it drops and explains the peak.
-
-
-#### Spectral novelty 'Stay with me'
-
-```{r}
-"features/senn-v-2.json" |>
-  compmus_spectral_novelty() |>
-  ggplot(aes(t, novelty)) +
-  geom_line() +
-  theme_minimal() +
-  labs(x = "Time (s)", y = "Spectral Novelty")
-```
-
-***
-Theess
-
-
-### Tempogram 'Stay with me'
-```{r}
-"features/senn-v-2.json" |>
-  compmus_tempogram(window_size = 8, hop_size = 1, cyclic = FALSE) |>
-  ggplot(aes(x = time, y = bpm, fill = power)) +
-  geom_raster() +
-  scale_fill_viridis_c(guide = "none") +
-  labs(x = "Time (s)", y = "Tempo (BPM)") +
-  theme_classic()
-```
-
-***
-In contrast to the tempogram of 'Lost', this tempogram of 'Stay with me' is not stable at all mostly due to the drums of the song. The drums of the song are not exactly on the beat of the song and differ constantly by an 8th note. It explains the wiggly lines up until the 75 second mark. However, after the chorus the tempo does not change but there is obviously a jump in tempo up until the 90 seconds mark. This part has no drums at all so it is basing the beat on the piano part of the song which weirdly enough is the *actual bpm* of 160. Interestingly enough there is a trend throughout the whole song of a bpm of 320 which is double the actual bpm.
-
-Key & Chordograms
-====================================================
-
-Column {.tabset}
-------------------------------------------------
-
-### Chordogram song 1
-
-```{r}
-"features/senn-v-1.json" |>
-  compmus_chroma(norm = "euclidean") |>
-  compmus_match_pitch_templates(
-    chord_templates,         # Change to chord_templates if desired
-    norm = "euclidean",       # Try different norms (and match it with what you used in `compmus_chroma`)
-    distance = "cosine"   # Try different distance metrics
-  ) |>
-  ggplot(aes(x = time, y = name, fill = d)) +
-  geom_raster() +
-  scale_fill_viridis_c(guide = "none") +               # Change the colours?
-  labs(x = "Time (s)", y = "Template", fill = NULL) +
-  theme_classic()                                      # Change the theme?
-```
-
-***
-  The first song "Lost" uses funky but the same 4 chords before the drop which aren't exactly major or minor and is the reason why there is a lot of relative major/minor shifts. Also, in the drop the key interchanges every measure and explains the unreadability in that section.
-
-
-
-Column {.tabset}
---------------------------------
-
-### keygram song 1
-
-```{r}
-"features/senn-v-1.json" |>
-  compmus_chroma(norm = "euclidean") |>
-  compmus_match_pitch_templates(
-    key_templates,         # Change to chord_templates if desired
-    norm = "euclidean",       # Try different norms (and match it with what you used in `compmus_chroma`)
-    distance = "cosine"   # Try different distance metrics
-  ) |>
-  ggplot(aes(x = time, y = name, fill = d)) +
-  geom_raster() +
-  scale_fill_viridis_c(guide = "none") +               # Change the colours?
-  labs(x = "Time (s)", y = "Template", fill = NULL) +
-  theme_classic()                                      # Change the theme?
-```
-
-
-***
-This keygram of the song Lost is made using the given code and is pretty blurry and hard to read
-
-### keygram song 1 temperley
-
-```{r}
-"features/senn-v-1.json" |>
-  compmus_chroma(norm = "euclidean") |>
-  compmus_match_pitch_templates(
-    key_templates_temperley,         # Change to chord_templates if desired
-    norm = "euclidean",       # Try different norms (and match it with what you used in `compmus_chroma`)
-    distance = "cosine"   # Try different distance metrics
-  ) |>
-  ggplot(aes(x = time, y = name, fill = d)) +
-  geom_raster() +
-  scale_fill_viridis_c(guide = "none") +               # Change the colours?
-  labs(x = "Time (s)", y = "Template", fill = NULL) +
-  theme_classic()                                      # Change the theme?
-```
-
-***
-This keygram of the same song is made with the improvements by temperley which gives the keygram a better definition but changes the key completely in some cases (eg. Em and C).
-
-Chromagrams & Cepstograms {.storyboard}
-=================================================
-
-
-### Chromagram of the song 'Lost'
-
-```{r}
-"features/senn-v-1.json" |>                           # Change the track
-  compmus_chroma(norm = "euclidean") |>                 # Change the norm
-  ggplot(aes(x = time, y = pc, fill = value)) +
-  geom_raster() +
-  scale_y_continuous(
-    breaks = 0:11,
-    minor_breaks = NULL,
-    labels = c(
-                "C", "C#|Db", "D", "D#|Eb",
-                "E", "F", "F#|Gb", "G",
-                "G#|Ab", "A", "A#|Bb", "B"
-              )
-  ) +
-  scale_fill_viridis_c(guide = "none") +               # Change the colours?
-  labs(x = "Time (s)", y = NULL, fill = NULL) +
-  theme_classic()
-
-```
-
-### Cepstogram of the song 'Lost'
-
-```{r}
-"features/senn-v-1.json" |>                           # Change the track
-  compmus_mfccs(norm = "manhattan") |>                  # Change the norm
-  ggplot(aes(x = time, y = mfcc, fill = value)) +
-  geom_raster() +
-  scale_y_continuous(
-    breaks = 0:12,
-    minor_breaks = NULL,
-  ) +
-  scale_fill_viridis_c(guide = "none") +               # Change the colours?
-  labs(x = "Time (s)", y = "Coefficient Number", fill = NULL) +
-  theme_classic()                                      # Change the theme?
-```
-
-***
-This cepstogram of the song 'Lost' shows bright almost constant lower coefficients, which indicates that there is a stable fundamental frequency.
-Around 60 sec and 160 sec there is a drop in cepstral energy followed by a surge of energy that lasts about a minute each. This shows that the song has a instrumental break before the drop which has a lot more cepstral energy than the rest of the song.
-
-### Chroma similarity song 1
-
-```{r}
-"features/senn-v-1.json" |>                           # Change the track
-  compmus_chroma(norm = "manhattan") |>                 # Change the norm
-  compmus_self_similarity(
-    feature = pc,
-    distance = "euclidean"                             # Change the distance
-  ) |>
-  ggplot(aes(x = xtime, y = ytime, fill = d)) +
-  geom_raster() +
-  scale_fill_viridis_c(guide = "none") +               # Change the colours?
-  labs(x = "Time (s)", y = NULL, fill = NULL) +
-  theme_classic()
-```
-
-
-
-### Timber similarity song 1
-
-```{r}
-"features/senn-v-1.json" |>                           # Change the track
-  compmus_mfccs(norm = "manhattan") |>                  # Change the norm
-  compmus_self_similarity(
-    feature = mfcc,
-    distance = "euclidean"                             # Change the distance
-  ) |>
-  ggplot(aes(x = xtime, y = ytime, fill = d)) +
-  geom_raster() +
-  scale_fill_viridis_c(guide = "none") +               # Change the colours?
-  labs(x = "Time (s)", y = NULL, fill = NULL) +
-  theme_classic()                                      # Change the theme?
-```
-
-
-
-### Chromagram song 2
-
-```{r}
-"features/senn-v-2.json" |>                           # Change the track
-  compmus_chroma(norm = "euclidean") |>                 # Change the norm
-  ggplot(aes(x = time, y = pc, fill = value)) +
-  geom_raster() +
-  scale_y_continuous(
-    breaks = 0:11,
-    minor_breaks = NULL,
-    labels = c(
-                "C", "C#|Db", "D", "D#|Eb",
-                "E", "F", "F#|Gb", "G",
-                "G#|Ab", "A", "A#|Bb", "B"
-              )
-  ) +
-  scale_fill_viridis_c(guide = "none") +               # Change the colours?
-  labs(x = "Time (s)", y = NULL, fill = NULL) +
-  theme_classic()
-
-```
-
-
-### Cepstogram song 2
-
-```{r}
-"features/senn-v-2.json" |>                           # Change the track
-  compmus_mfccs(norm = "manhattan") |>                  # Change the norm
-  ggplot(aes(x = time, y = mfcc, fill = value)) +
-  geom_raster() +
-  scale_y_continuous(
-    breaks = 0:12,
-    minor_breaks = NULL,
-  ) +
-  scale_fill_viridis_c(guide = "none") +               # Change the colours?
-  labs(x = "Time (s)", y = "Coefficient Number", fill = NULL) +
-  theme_classic()                                      # Change the theme?
-```
-
-***
-The cepstogram of the song 'Stay with me' shows a lot of instability in the lower coefficients which indicates that there is a lot of
-
-### Chroma similarity song 2
-
-```{r}
-"features/senn-v-2.json" |>                           # Change the track
-  compmus_chroma(norm = "euclidean") |>                 # Change the norm
-  compmus_self_similarity(
-    feature = pc,
-    distance = "cosine"                             # Change the distance
-  ) |>
-  ggplot(aes(x = xtime, y = ytime, fill = d)) +
-  geom_raster() +
-  scale_fill_viridis_c(guide = "none") +               # Change the colours?
-  labs(x = "Time (s)", y = NULL, fill = NULL) +
-  theme_classic()
-```
-
-
-### Timber similarity song 2
-
-```{r}
-"features/senn-v-2.json" |>                           # Change the track
-  compmus_mfccs(norm = "manhattan") |>                  # Change the norm
-  compmus_self_similarity(
-    feature = mfcc,
-    distance = "euclidean"                             # Change the distance
-  ) |>
-  ggplot(aes(x = xtime, y = ytime, fill = d)) +
-  geom_raster() +
-  scale_fill_viridis_c(guide = "none") +               # Change the colours?
-  labs(x = "Time (s)", y = NULL, fill = NULL) +
-  theme_classic()                                      # Change the theme?
-```
-
-
-
-
-First visualisations
+Conclusion
 ===========================================================
 
-Column {data-width=500}
-------------------------------------------------
 
-### AI Contest Visualization
+
+Column
+-------------------------------------------------
+
+### Visualization conclusion
+
+####
+
+Here is a visualization from the 4 most important features and the visualization of from the 'Introduction' page. 
+
+The visualization of the 4 most important features shows intrumentalness and valence are linearly correlated. We can also see that high arousal is often paired with high valence and low arousal with low valence.
 
 ```{r}
-aisc2024 |>                   # Start with the data
-  ggplot(                     # Set up the plot.
+compmus2025_filtered |>
+  ggplot(
     aes(
-      x = valence,
-      y = arousal,
-      colour = tempo,
-      label = artist
+      x = arousal,
+      y = instrumentalness,
+      colour = valence,
+      size = danceability
     )
   ) +
-  geom_point() +              # Scatter plot.
-  geom_rug(linewidth = 0.1) + # Add 'fringes' to show data distribution.
-  geom_text(                  # Add text labels from above.
-    x = 121,
-    y = 4.91,
-    label = "Onda Corta - Sud America",
-    size = 3,                 # Override size (not loudness here).
-    hjust = "left",           # Align left side of label with the point.
-    vjust = "center",         # Align vertical centre of label with the point.
-    angle = 30                # Rotate the text label
+  # 1) plot all points with a lower alpha (lighter points)
+  geom_point(alpha = 1) +
+
+  # 2) highlight the two special files by plotting them in a second layer
+  geom_point(
+    data = compmus2025_filtered |>
+      filter(filename %in% c("senn-v-1", "senn-v-2")),
+    colour = "orange",
+    size = 5,
+    alpha = 1
   ) +
-  geom_smooth() +
-  scale_colour_viridis_c() +  # Use the popular viridis colour palette.
-  scale_size_continuous(      # Fine-tune the sizes of each point.
-    trans = "exp",            # Use an exp transformation to emphasise loud..
-    guide = "none"            # Remove the legend for size.
+
+  scale_color_viridis_c() +
+  labs(
+    x = "Arousal",
+    y = "Instrumentalness",
+    colour = "Valence",
+    size = "Danceability"
   ) +
-  theme_light()             # Use a simpler theme.
-ggplotly()
+  theme_minimal()
+```
+
+#### 
+
+If we compare these two visualizations we see that Non-AI songs often have a combination of higher instrumentalness and arousal than AI-made songs.
+
+```{r}
+compmus2025_filtered |>
+  ggplot(
+    aes(
+      x = arousal,
+      y = instrumentalness,
+      colour = ai,
+      size = danceability
+    )
+  ) +
+  # 1) plot all points with a lower alpha (lighter points)
+  geom_point(alpha = 1) +
+
+  # 2) highlight the two special files by plotting them in a second layer
+  geom_point(
+    data = compmus2025_filtered |>
+      filter(filename %in% c("senn-v-1", "senn-v-2")),
+    colour = "red",
+    size = 5,
+    alpha = 0.3
+  ) +
+
+  scale_color_viridis_d() +
+  labs(
+    x = "Arousal",
+    y = "Instrumentalness",
+    colour = "AI",
+    size = "Danceability"
+  ) +
+  theme_minimal()
 ```
 
 Column
--------------------------------------
+---------------------------------------------
 
-### Corpus 2025 Visualization
+### 
 
-```{r}
-corpus |>                   # Start with the data
-  ggplot(                     # Set up the plot.
-    aes(
-      x = valence,
-      y = arousal,
-      colour = tempo,
-      label = filename
-    )
-  ) +
-  geom_point(aes(size = ifelse(filename %in% c("senn-v-1", "senn-v-2"), 3, 1))) +              # Scatter plot.
-  geom_rug(linewidth = 0.1) + # Add 'fringes' to show data distribution.
-  geom_smooth() +
-  scale_colour_viridis_c() +  # Use the popular viridis colour palette.
-  scale_size_continuous(      # Fine-tune the sizes of each point.
-    trans = "exp",            # Use an exp transformation to emphasise loud..
-    guide = "none"            # Remove the legend for size.
-  ) +
-  theme_light()             # Use a simpler theme.
-ggplotly()
+From these analyses, I’ve learned that even simple track-level features like arousal, danceability, valence, and instrumentalness can highlight some distinctions between songs but only the low-level features could create true distinctions between the songs. That leads to that not all features (e.g., tempo or approachability) prove useful for classifying AI versus non-AI tracks. By focusing on the more predictive features, the random forest model outperforms a basic k-nearest neighbor approach, successfully capturing subtle patterns in the music.
 
-```
+These findings can benefit anyone looking to build music recommendation or automatic classification systems, as well as artists interested in how certain audio attributes (e.g., energy, valence) align with listener perception. Understanding feature importance helps streamline future music analyses, enabling more efficient data-driven approaches to everything from playlist curation to AI-generated music detection.
