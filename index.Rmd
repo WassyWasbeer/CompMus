@@ -232,7 +232,7 @@ Column
 
 ####
 
-This is a visualization of the whole class corpus based on the highest performing features, which are explained in detail in the 'Classification' tab. My songs are highlighted in orange and are both Non-AI. The songs seem closely related in the graph but are actually totally different in nature and will be explored in this portfolio.
+This is a visualization of the whole class corpus based on the highest performing features, which are explained in detail in the ['Classification'](#classification) tab. My songs are highlighted in orange and are both Non-AI. The songs seem closely related in the graph but are actually totally different in nature and will be explored in this portfolio.
 
 
 ```{r}
@@ -369,7 +369,7 @@ Column
 
 #### Chroma similarity
 
-The randomness of the song is truly captivated in the chroma-based self-similarity matrix, which show no real clear overlap of sections in the song.
+The randomness of the song is truly captivated in the chroma-based self-similarity matrix. A chroma-based self-similarity matrix is a visualization that shows how similar segments of a musical piece are to each other based on their chroma features. This matrix however shows no real clear overlap of sections in the song, since there are no other diagonal lines (except for the true diagonal) and no giant boxes that show repeating sections.
 
 ```{r}
 "features/senn-v-2.json" |>                           # Change the track
@@ -386,7 +386,7 @@ The randomness of the song is truly captivated in the chroma-based self-similari
 ```
 
 I love drumstep <3
- 
+
 
 #### Chordogram
 
@@ -484,7 +484,7 @@ The song 'Stay with me' starts with a bit of piano and vocals and when the first
 
 
 
-#### Tempogram 
+#### Tempogram
 
 In contrast to the tempogram of 'Lost', this tempogram of 'Stay with me' is not stable at all mostly due to the drums of the song. The drums of the song are not exactly on the beat of the song and differ constantly due to the half-time drum patterns. It explains the wiggly lines up until the 75 second mark. However, after the chorus the tempo does not change but there is obviously a jump in tempo up until the 90 seconds mark. This part has no drums at all so it is basing the beat on the piano part of the song which weirdly enough is the *actual bpm* of 160. Also, interestingly enough there is a trend throughout the whole song of a bpm of 320 which is double the actual bpm.
 
@@ -550,7 +550,7 @@ This spectral novelty graph shows the spectral energy at different moments in ti
 
 #### Timbre similarity
 
-The song stays true in it's summery vibe throughout the song and can be shown through the timbre-based self-similarity matrix. The self-similarity matrix compares the song's timbre features with itself. The long diagonal lines and large squares indicate that the songs timbre throughout the song is very consistent.
+The song stays true in it's summery vibe throughout the song and can be shown through the timbre-based self-similarity matrix. The self-similarity matrix is a visualization of the song's timbre features compared with itself. The large squares and long diagonal lines thorugh those boxes indicate that the songs timbre throughout the song is very consistent.
 
 ```{r}
 "features/senn-v-1.json" |>                           # Change the track
@@ -795,7 +795,7 @@ compmus2025_filtered |>
 
 #### 
 
-If we compare these two visualizations we see that Non-AI songs often have a combination of higher instrumentalness and arousal than AI-made songs.
+If we compare these two visualizations we see that Non-AI songs often have a combination of higher instrumentalness and arousal than AI-made songs, but this is just an observation from the visualization and the feature importance from the ["classifcation"](#classification) tab.
 
 ```{r}
 compmus2025_filtered |>
@@ -832,8 +832,11 @@ compmus2025_filtered |>
 Column
 ---------------------------------------------
 
-### 
+### Conclusion
 
-From these analyses, I’ve learned that even simple track-level features like arousal, danceability, valence, and instrumentalness can highlight some distinctions between songs but only the low-level features could create true distinctions between the songs. That leads to that not all features (e.g., tempo or approachability) prove useful for classifying AI versus non-AI tracks. By focusing on the more predictive features, the random forest model outperforms a basic k-nearest neighbor approach, successfully capturing subtle patterns in the music.
+####
 
-These findings can benefit anyone looking to build music recommendation or automatic classification systems, as well as artists interested in how certain audio attributes (e.g., energy, valence) align with listener perception. Understanding feature importance helps streamline future music analyses, enabling more efficient data-driven approaches to everything from playlist curation to AI-generated music detection.
+
+From these analyses, I’ve learned that even simple track-level features like arousal, danceability, valence, and instrumentalness can highlight some distinctions between songs but only the low-level features could create true distinctions between the songs. That leads to that not all features (e.g. tempo or approachability) prove useful for classifying AI versus non-AI tracks. By focusing on the more predictive features, the random forest model could outperform a basic k-nearest neighbor approach, successfully capturing subtle patterns in the music.
+
+These findings can benefit anyone looking to build music recommendation or automatic classification systems, as well as artists who are interested in how certain audio attributes (e.g., energy, valence) align with listener perception of the music. Understanding feature importance helps streamline future music analyses and enables more efficient data-driven approaches to everything from playlist management to AI-generated music detection.
